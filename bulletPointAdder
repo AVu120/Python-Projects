@@ -20,7 +20,8 @@ def bulletPointAdder(text):
 bullerPointAdder(text)
 
 # print or pyperclip.paste() bPText would give    
-* Lists of animals
+"""* Lists of animals
 * Lists of aquarium life
 * Lists of biologists by author abbreviation
 * Lists of cultivars
+"""
