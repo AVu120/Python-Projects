@@ -1,0 +1,170 @@
+#! python3
+# A program that lets you keep track of all the important birthdays and dates in your life.
+
+import shelve, re
+
+# Open shelf file.
+birthdays_shelf_file = shelve.open('birthdays')
+valid_months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+
+# If not first time executing this program, retrieve stored birthdays from shelf file.
+try:
+    birthdays = birthdays_shelf_file['birthdays']
+except KeyError:
+    birthdays = {} # If first time opening this program, create new dictionary of name: birthday values
+                   # to store birthday and name values in.
+
+date_regex = re.compile(r"^\d{2}[a-zA-Z]{3}$")
+day_regex = re.compile(r"^\d{2}")
+month_regex = re.compile(r"[a-zA-Z]{3}$")
+
+print("Welcome to the family birthday tracker!\n")
+
+
+# Program functions.
+def options():
+    print("What would you like to do (commands, names and dates are not case-sensitive)?")
+    print("F: Find someone's birthday.") # Search for someone's birthday through their name.
+    print("A or E: Add or edit someone's birthday.")
+    print("D: Delete someone's birthday.")
+    print("D-ALL: Delete all birthdays.")
+    print("C: Check if a date contains someone's birthday(s).")
+    print("L: List everyone's birthday.")
+    print("Q: Quit program.")
+
+# Add or edit someone's birthday.
+def add_birthday(name=''):
+    if not name:
+        name = input("Whose birthday would you like to add or edit (please enter full name e.g. Anthony Hien Vu?)\n")
+        name_lower_stripped = name.strip().lower()
+    while True:
+        name_lower_stripped = name.strip().lower()
+        date = input("Please enter a valid date for their birthday (in DDMMM format)?\n")
+        date_lower_stripped = date.strip().lower()
+        if date_regex.search(date) is not None:
+            if int(day_regex.search(date_lower_stripped).group()) > 31:
+                continue
+            elif month_regex.search(date_lower_stripped).group() not in valid_months:
+                continue
+            else:
+                birthdays[name_lower_stripped] = date_lower_stripped
+                print(name.title() + "'s birthday of " + date.title() + " has been added.\n")
+                break
+
+
+# Find someone's birthday through their name.
+def find_birthday():
+    name = input("Whose birthday would you like to find e.g. Anthony Hien Vu?\n")
+    name_lower_stripped = name.strip().lower()
+    if name_lower_stripped in birthdays:
+        print(name.title() + "'s birthday is " + birthdays[name_lower_stripped].title() + ".\n")
+    else:
+        print("There is no such name in the database.")
+        while True:
+            answer = input("Would you like to add their birthday (Y/N)?\n")
+            answer = answer.strip().lower()
+            if answer == "y":
+                add_birthday(name_lower_stripped)
+                break
+            if answer == "n":
+                print()
+                break
+
+
+# Check to see if whose birthday falls on a user-specified date.
+def check_date():
+    while True:
+        date = input("Please enter a valid date to check in DDMMM format:\n")
+        date_lower_stripped = date.strip().lower()
+        if date_regex.search(date) is not None:
+            if int(day_regex.search(date_lower_stripped).group()) > 31:
+                continue
+            elif month_regex.search(date_lower_stripped).group() not in valid_months:
+                continue
+            elif date_lower_stripped in birthdays.values():
+                found_names = []
+                for name in birthdays.keys():
+                    if birthdays[name] == date:
+                        found_names.append(name.title())
+                print("The following people have their birthday on " + date.title() + ":")
+                for name in found_names:
+                    print(name)
+                print()
+                break
+            else:
+                print("No one's birthday is on this date.\n")
+                break
+
+
+# List all birthdays stored in the program.
+def list_birthdays():
+    if len(birthdays) > 0:
+        for k, v in birthdays.items():
+            print(k.title() + "'s birthday is on " + v.title() + ".")
+        print()
+    else:
+        while True:
+            prompt = input("The database is empty! Would you like to add a birthday (Y/N)?\n")
+            prompt = prompt.strip().lower()
+            if prompt == "y":
+                add_birthday()
+                break
+            if prompt == "n":
+                print()
+                break
+
+
+# Delete the stored birthday of a user-specified name.
+def delete_birthday():
+    name = input("Whose birthday do you want to delete (please enter their full name e.g. Anthony Hien Vu)?\n")
+    name_lower_stripped = name.strip().lower()
+    if name_lower_stripped in birthdays:
+        del birthdays[name_lower_stripped]
+        print(name.title() + "'s birthday has been deleted!\n")
+    else:
+        print("The name does not exist in the database!\n")
+
+
+# Delete all the stored birthdays in the program.
+def delete_all_birthdays():
+    while True:
+        prompt = input("Are you sure you want to delete everyone's birthday (Y/N)?\n")
+        prompt = prompt.strip().lower()
+        if prompt == "y":
+            birthdays.clear()
+            print("The database has been emptied!\n")
+            break
+        if prompt == "n":
+            print("Okay nevermind!\n")
+            break
+
+
+# Program starts and runs mainly through here.
+while True:
+    options()
+    command = input()
+    command = command.strip().lower()
+    if command == "a" or command == "e":
+        add_birthday()
+    elif command == "f":
+        find_birthday()
+    elif command == "c":
+        check_date()
+    elif command == "l":
+        list_birthdays()
+    elif command == "d":
+        delete_birthday()
+    elif command == "d-all":
+        delete_all_birthdays()
+    elif command == "q":
+        break
+    else:
+        print("Incorrect command. Please enter again.\n")
+
+# Save all birthdays into a shelf file and then close the shelf file.
+birthdays_shelf_file['birthdays'] = birthdays
+birthdays_shelf_file.close()
+
+# Exit the program.
+print("Thank you for using the program!")
+input("Please press enter to exit.")
